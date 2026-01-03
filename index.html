@@ -4,16 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git & GitHub Mastery | Interactive Learning Dashboard</title>
+    <title>Git & GitHub Mastery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        /* Custom styles for elements not easily handled by Tailwind utilities alone */
         body {
             background-color: #fdfbf7;
-            /* Warm neutral background */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #1f2937;
+            overflow-x: hidden;
         }
 
         .chart-container {
@@ -33,14 +32,6 @@
             transform: scale(1.1);
         }
 
-        .connector {
-            position: absolute;
-            background-color: #cbd5e1;
-            z-index: 0;
-            transition: all 0.5s ease;
-        }
-
-        /* Conflict Editor Styles */
         .code-line {
             font-family: 'Courier New', Courier, monospace;
             padding: 2px 8px;
@@ -55,707 +46,1039 @@
 
         .conflict-content-a {
             background-color: #ecfdf5;
-            /* Green tint */
         }
 
         .conflict-content-b {
             background-color: #eff6ff;
-            /* Blue tint */
         }
 
-        .terminal-text {
+        .git-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: #475569;
+            z-index: 10;
+        }
+
+        .tag-marker {
+            background: #f05032;
+            color: white;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .ascii-block {
             font-family: 'Courier New', Courier, monospace;
+            line-height: 1.6;
+            white-space: pre;
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        /* Nav Transition */
+        .page-view {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        /* Quiz Completion Animations */
+        @keyframes blueFlash {
+            0% {
+                border-color: transparent;
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+
+            50% {
+                border-color: #3b82f6;
+                box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.5);
+            }
+
+            100% {
+                border-color: #e2e8f0;
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        .quiz-complete-flash {
+            animation: blueFlash 1.5s ease-out infinite;
+            border-width: 2px !important;
+        }
+
+        #completion-check {
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+        }
+
+        #completion-check.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .nav-tile {
+            transition: all 0.2s ease;
+        }
+
+        .nav-tile:hover {
+            transform: translateY(-2px);
+            background-color: #334155;
+            border-color: #475569;
+        }
+
+        .nav-tile.active {
+            background-color: #475569;
+            border-color: #f05032;
+        }
+
+        /* Custom Git Icon Styles */
+        .git-branch-icon {
+            position: relative;
+            width: 48px;
+            height: 48px;
+        }
+
+        .git-branch-line-main {
+            position: absolute;
+            width: 4px;
+            height: 32px;
+            background-color: #f05032;
+            left: 12px;
+            top: 8px;
+            border-radius: 2px;
+        }
+
+        .git-branch-line-split {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-right: 4px solid #f05032;
+            border-top: 4px solid #f05032;
+            border-top-right-radius: 8px;
+            left: 14px;
+            top: 14px;
+        }
+
+        .git-branch-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f05032;
+            border: 2px solid white;
+            border-radius: 50%;
         }
     </style>
-    <!-- Chosen Palette: Warm Neutrals (Background: #fdfbf7) with Git Accents (Orange: #f05032, Slate: #475569) -->
-    <!-- Application Structure Plan: 
-         1. Header: Title and user context.
-         2. Workflow Simulator: Interactive "Assembly Line" to visualize Add -> Commit -> Push.
-         3. Branching & Merging: Interactive HTML-based graphs switching between Fast-Forward and Three-Way merges to visualize the "Train Tracks".
-         4. Conflict Lab: A simulated code editor to practice resolving merge conflicts safely.
-         5. Time Travel Console: A terminal simulation for Revert vs. Reset.
-         6. Quiz Section: Dynamic assessment with Chart.js visualization of results.
-         Rationale: This structure breaks abstract concepts into tangible "labs" (Assembly, Graph, Editor, Terminal) maximizing active learning.
-    -->
-    <!-- Visualization & Content Choices:
-         1. Git Graphs: HTML/CSS Flex/Grid diagrams. Library charts are poor for tree structures without complex plugins. HTML allows accessible, interactive nodes.
-         2. Quiz Results: Chart.js Doughnut chart. Goal: Inform/Reward. Justification: Standard way to visualize part-to-whole success rates.
-         3. Conflict Editor: Styled HTML Divs. Goal: Change/Interact. Justification: Simulates the VS Code experience described in the guide.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 
 <body class="antialiased min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="bg-slate-800 text-white p-6 shadow-md">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
+    <!-- Header Section -->
+    <header class="bg-slate-800 text-white p-6 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-6">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-[#f05032]">Git & GitHub <span
-                        class="text-white">Command Center</span></h1>
-                <p class="text-slate-400 mt-1">Week 1 Interactive Study Guide & Simulation</p>
+                <button onclick="navigateTo('home')"
+                    class="text-3xl font-bold tracking-tight text-[#f05032] hover:opacity-90 transition-opacity text-left">
+                    Git & GitHub <span class="text-white">Learning Center</span>
+                </button>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-4">
-                <div class="text-center px-4 py-2 bg-slate-700 rounded-lg">
-                    <span class="block text-xs text-slate-400 uppercase">Current Branch</span>
-                    <span class="font-mono text-green-400 font-bold">main</span>
-                </div>
-                <div class="text-center px-4 py-2 bg-slate-700 rounded-lg">
-                    <span class="block text-xs text-slate-400 uppercase">Status</span>
-                    <span id="global-status" class="font-mono text-yellow-400 font-bold">Clean</span>
-                </div>
-            </div>
+            <!-- Navigation Tiles -->
+            <nav class="flex flex-wrap gap-2 justify-center">
+                <button onclick="navigateTo('git-concepts')" id="nav-git-concepts"
+                    class="nav-tile text-center px-4 py-2 bg-slate-700 rounded-lg border border-slate-600">
+                    <span class="block text-sm text-slate-400 uppercase font-bold tracking-wider">Git Concepts</span>
+                    <span class="font-mono text-sm text-yellow-400 font-bold">The Basics</span>
+                </button>
+                <button onclick="navigateTo('projects')" id="nav-projects"
+                    class="nav-tile text-center px-4 py-2 bg-slate-700 rounded-lg border border-slate-600">
+                    <span class="block text-sm text-slate-400 uppercase font-bold tracking-wider">Projects</span>
+                    <span class="font-mono text-sm text-blue-400 font-bold">Management</span>
+                </button>
+                <button onclick="navigateTo('actions')" id="nav-actions"
+                    class="nav-tile text-center px-4 py-2 bg-slate-700 rounded-lg border border-slate-600">
+                    <span class="block text-sm text-slate-400 uppercase font-bold tracking-wider">Actions</span>
+                    <span class="font-mono text-sm text-green-400 font-bold">CI/CD</span>
+                </button>
+                <button onclick="navigateTo('security')" id="nav-security"
+                    class="nav-tile text-center px-4 py-2 bg-slate-700 rounded-lg border border-slate-600">
+                    <span class="block text-sm text-slate-400 uppercase font-bold tracking-wider">Security</span>
+                    <span class="font-mono text-sm text-red-400 font-bold">Scanning</span>
+                </button>
+                <button onclick="navigateTo('administration')" id="nav-administration"
+                    class="nav-tile text-center px-4 py-2 bg-slate-700 rounded-lg border border-slate-600">
+                    <span class="block text-sm text-slate-400 uppercase font-bold tracking-wider">Administration</span>
+                    <span class="font-mono text-sm text-orange-400 font-bold">Settings</span>
+                </button>
+            </nav>
         </div>
     </header>
 
-    <main class="flex-grow max-w-6xl mx-auto w-full p-4 space-y-12 my-8">
+    <main class="flex-grow max-w-6xl mx-auto w-full p-4 my-8">
 
-        <!-- Intro Text -->
-        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-800 mb-4">Welcome to Your Workspace</h2>
-            <p class="text-slate-600 leading-relaxed mb-4">
-                Mastering Git is about understanding the flow of data. This dashboard transforms the abstract commands
-                from your study guide into interactive simulations.
-                You will explore the <strong>Three Pillars of Git</strong>, visualize <strong>Branching
-                    Strategies</strong>, practice resolving <strong>Merge Conflicts</strong>, and learn how to safely
-                <strong>Undo Mistakes</strong>.
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div class="p-4 bg-orange-50 rounded-lg border border-orange-100">
-                    <h3 class="font-bold text-orange-800 mb-2">Key Concept: The Repo</h3>
-                    <p class="text-sm text-slate-600">A folder containing your project files and their full history.
-                        It's your project's time capsule.</p>
-                </div>
-                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <h3 class="font-bold text-blue-800 mb-2">Key Concept: The Commit</h3>
-                    <p class="text-sm text-slate-600">A permanent "save point" snapshot. Identified by a unique SHA hash
-                        (e.g., <code>7a2b3c4</code>).</p>
-                </div>
-                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                    <h3 class="font-bold text-green-800 mb-2">Key Concept: HEAD</h3>
-                    <p class="text-sm text-slate-600">A pointer to your current location in the Git timeline. It says
-                        "You are here".</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 1: The Git Lifecycle (Workflow) -->
-        <section id="workflow-section">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <span
-                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
-                    The Git Lifecycle
-                </h2>
-                <p class="text-slate-600 mt-2">
-                    Understand the separation between your <strong>Working Directory</strong>, <strong>Staging
-                        Area</strong>, and <strong>Local Repository</strong>.
-                    Click the buttons below to move the file through the lifecycle.
+        <!-- PAGE: Home / Dashboard Overview -->
+        <div id="page-home" class="page-view active space-y-12">
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                <h2 class="text-4xl font-bold text-slate-800 mb-6">Welcome to the DevOps Training Hub</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-10">
+                    Master the tools of modern software engineering. From the fundamentals of Git to the advanced
+                    automation of GitHub Actions, explore each module to build your technical proficiency.
                 </p>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-                <!-- Controls -->
-                <div class="bg-slate-50 p-4 border-b border-slate-200 flex flex-wrap gap-4 justify-center">
-                    <button onclick="workflowAction('edit')"
-                        class="px-4 py-2 bg-white border border-slate-300 rounded hover:bg-slate-50 font-mono text-sm shadow-sm">Edit
-                        File</button>
-                    <button onclick="workflowAction('add')"
-                        class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-mono text-sm shadow-sm transition-colors">git
-                        add .</button>
-                    <button onclick="workflowAction('commit')"
-                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-mono text-sm shadow-sm transition-colors">git
-                        commit -m "..."</button>
-                    <button onclick="workflowAction('push')"
-                        class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-mono text-sm shadow-sm transition-colors">git
-                        push origin</button>
-                    <button onclick="workflowAction('reset')"
-                        class="px-4 py-2 text-slate-500 hover:text-red-500 text-sm ml-auto">Reset Demo</button>
-                </div>
-
-                <!-- Visualization Area -->
-                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-4 relative">
-                    <!-- Zone 1: Working Dir -->
-                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[200px] relative transition-colors"
-                        id="zone-working">
-                        <div
-                            class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Working Directory</div>
-                        <div id="file-object"
-                            class="bg-slate-200 border border-slate-400 text-slate-700 p-3 rounded shadow w-3/4 mx-auto mt-8 text-center text-sm font-mono transition-all duration-500">
-                            📄 index.html
-                            <div class="text-[10px] mt-1 text-slate-500" id="file-status">Clean</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div onclick="navigateTo('git-concepts')"
+                        class="p-8 bg-orange-50 border border-orange-100 rounded-2xl cursor-pointer hover:shadow-lg transition-all group">
+                        <div class="flex justify-center mb-6">
+                            <div class="git-branch-icon">
+                                <div class="git-branch-line-main"></div>
+                                <div class="git-branch-line-split"></div>
+                                <div class="git-branch-dot" style="top: 4px; left: 9px;"></div>
+                                <div class="git-branch-dot" style="bottom: 4px; left: 9px;"></div>
+                                <div class="git-branch-dot" style="top: 10px; left: 27px;"></div>
+                            </div>
                         </div>
+                        <h3 class="text-xl font-bold text-orange-900 mb-2 group-hover:text-[#f05032]">Git Concepts</h3>
+                        <p class="text-sm text-orange-700">Learn the fundamentals of Git</p>
                     </div>
-
-                    <!-- Arrow -->
-                    <div class="hidden md:flex items-center justify-center text-slate-300">➜</div>
-
-                    <!-- Zone 2: Staging -->
-                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[200px] relative transition-colors"
-                        id="zone-staging">
-                        <div
-                            class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Staging Area</div>
-                        <div class="h-full flex items-center justify-center text-slate-300 text-sm italic"
-                            id="staging-placeholder">Empty (Box Open)</div>
-                    </div>
-
-                    <!-- Arrow -->
-                    <div class="hidden md:flex items-center justify-center text-slate-300">➜</div>
-
-                    <!-- Zone 3: Repository (Local & Remote) -->
-                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[200px] relative transition-colors md:col-span-1"
-                        id="zone-repo">
-                        <div
-                            class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Local Repository</div>
-                        <div class="space-y-2 mt-4" id="commit-stack">
-                            <!-- Commits go here -->
-                            <div class="bg-slate-800 text-white p-2 rounded text-xs font-mono text-center opacity-50">
-                                Commit: Initial</div>
-                        </div>
+                    <div class="p-8 bg-slate-50 border border-slate-200 rounded-2xl opacity-60">
+                        <div class="text-4xl mb-4">📊</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Advanced Modules</h3>
+                        <p class="text-sm text-slate-500">Projects, Actions, and Security modules are currently under
+                            construction.</p>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <div class="bg-slate-900 text-green-400 p-4 font-mono text-sm border-t border-slate-800"
-                    id="terminal-output">
-                    $ status: Ready to begin...
+        <!-- PAGE: Git Concepts -->
+        <div id="page-git-concepts" class="page-view space-y-12">
+
+            <section id="basics-section" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="bg-orange-50 p-8 border-b border-orange-100">
+                    <h2 class="text-3xl font-bold text-slate-800">Git Concepts (The “Pizza Slice” Version)</h2>
                 </div>
-            </div>
-        </section>
-
-        <!-- SECTION 2: Branching & Merging Visualizer -->
-        <section id="merging-section">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <span
-                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
-                    Merging Mechanics
-                </h2>
-                <p class="text-slate-600 mt-2">
-                    Visualizing the difference between a <strong>Fast-Forward Merge</strong> (linear) and a
-                    <strong>Three-Way Merge</strong> (divergent).
-                    Toggle the switch to see the difference in the "Train Tracks".
-                </p>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-                <div class="flex justify-center mb-8">
-                    <div class="bg-slate-100 p-1 rounded-lg flex">
-                        <button onclick="setMergeType('fast-forward')" id="btn-ff"
-                            class="px-6 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-slate-800 transition-all">Fast-Forward</button>
-                        <button onclick="setMergeType('three-way')" id="btn-tw"
-                            class="px-6 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition-all">Three-Way
-                            Merge</button>
-                    </div>
-                </div>
-
-                <!-- Graph Container -->
-                <div class="relative h-[250px] w-full max-w-3xl mx-auto bg-slate-50 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center"
-                    id="graph-stage">
-                    <!-- Content injected by JS -->
-                </div>
-
-                <div class="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                    <h3 class="font-bold text-blue-900 text-sm mb-1" id="merge-title">Fast-Forward Merge</h3>
-                    <p class="text-sm text-blue-800" id="merge-desc">
-                        The <code>main</code> branch hasn't moved since you created your feature. Git simply slides the
-                        <code>main</code> label forward to catch up. No new commit is created.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: The Conflict Lab -->
-        <section id="conflict-section">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <span
-                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
-                    The Conflict Lab
-                </h2>
-                <p class="text-slate-600 mt-2">
-                    You have a merge conflict! Both branches changed line 2 of <code>index.html</code>.
-                    Act as the developer and choose how to resolve the conflict markers (<code>&lt;&lt;&lt;</code>,
-                    <code>===</code>, <code>&gt;&gt;&gt;</code>).
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Editor -->
-                <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden text-sm border border-gray-700 font-mono">
-                    <div class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
-                        <span class="text-gray-300">index.html</span>
-                        <div class="flex gap-1">
-                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                        </div>
-                    </div>
-                    <div class="p-4 text-gray-300 leading-6" id="editor-content">
-                        <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                        <div class="code-line conflict-marker">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</div>
-                        <div class="code-line conflict-content-a text-green-800 font-bold">&lt;h1&gt;[Your Name] | Lead
-                            Developer&lt;/h1&gt;</div>
-                        <div class="code-line conflict-marker">=======</div>
-                        <div class="code-line conflict-content-b text-blue-800 font-bold">&lt;h1&gt;Welcome to the
-                            Creative Lab&lt;/h1&gt;</div>
-                        <div class="code-line conflict-marker">&gt;&gt;&gt;&gt;&gt;&gt;&gt; creative-version</div>
-                        <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                    </div>
-                </div>
-
-                <!-- Controls -->
-                <div class="flex flex-col justify-center space-y-4">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-slate-800 mb-4">Resolution Options</h3>
-                        <div class="space-y-3">
-                            <button onclick="resolveConflict('current')"
-                                class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group">
-                                <span class="block font-bold text-slate-700 group-hover:text-green-700">Accept Current
-                                    Change (HEAD)</span>
-                                <span class="text-xs text-slate-500">Keep the "Lead Developer" title.</span>
-                            </button>
-                            <button onclick="resolveConflict('incoming')"
-                                class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group">
-                                <span class="block font-bold text-slate-700 group-hover:text-blue-700">Accept Incoming
-                                    Change</span>
-                                <span class="text-xs text-slate-500">Keep the "Creative Lab" title.</span>
-                            </button>
-                            <button onclick="resolveConflict('both')"
-                                class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group">
-                                <span class="block font-bold text-slate-700 group-hover:text-purple-700">Keep Both
-                                    Changes</span>
-                                <span class="text-xs text-slate-500">Keep both titles in the file.</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="conflict-feedback"
-                        class="hidden p-4 bg-green-100 text-green-800 rounded-lg text-center font-bold">
-                        Conflict Resolved! Don't forget to commit.
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 4: Time Travel & Undo -->
-        <section id="undo-section">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <span
-                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">4</span>
-                    Time Travel Console
-                </h2>
-                <p class="text-slate-600 mt-2">
-                    Mistakes happen. Learn when to use <code>git revert</code> (safe, public) vs <code>git reset</code>
-                    (destructive, private).
-                </p>
-            </div>
-
-            <div class="bg-slate-900 rounded-xl shadow-lg p-6 font-mono text-sm text-gray-300 relative min-h-[300px]">
-                <div class="absolute top-4 right-4 text-xs text-gray-500">Interactive Terminal</div>
-
-                <!-- History Visualization inside Terminal -->
-                <div class="mb-6 border-b border-gray-700 pb-4">
-                    <div class="text-gray-500 mb-2">Current History (git log --oneline):</div>
-                    <ul id="undo-history" class="space-y-1">
-                        <li class="text-yellow-400">c3d4e5f (HEAD -> main) Added "I AM A POTATO" title</li>
-                        <li class="text-white">b2c3d4e Added contact section</li>
-                        <li class="text-white">a1b2c3d Initial commit</li>
-                    </ul>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-8 space-y-12">
                     <div>
-                        <p class="mb-2 text-white">Choose your command:</p>
-                        <div class="flex gap-2">
-                            <button onclick="runUndoCommand('revert')"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">git revert
-                                c3d4e5f</button>
-                            <button onclick="runUndoCommand('reset')"
-                                class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">git reset --hard
-                                HEAD~1</button>
+                        <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <span class="text-2xl">👨‍🍳</span> Working Tree, Staging Area, Repository
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div
+                                class="flex flex-col p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                <span
+                                    class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2">Countertop</span>
+                                <h4 class="text-lg font-bold text-slate-800 mb-3">Working Tree</h4>
+                                <p class="text-sm text-slate-500 leading-relaxed">This is where you prepare the pizza
+                                    (your code). Add toppings, knead the dough—make changes freely.</p>
+                            </div>
+                            <div
+                                class="flex flex-col p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest mb-2">Pizza
+                                    Peel</span>
+                                <h4 class="text-lg font-bold text-slate-800 mb-3">Staging Area</h4>
+                                <p class="text-sm text-slate-500 leading-relaxed">Before sliding it into the oven, you
+                                    put it on the peel. This is where you stage changes you’re ready to bake (commit).
+                                </p>
+                            </div>
+                            <div
+                                class="flex flex-col p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                <span class="text-xs font-bold text-red-600 uppercase tracking-widest mb-2">The
+                                    Oven</span>
+                                <h4 class="text-lg font-bold text-slate-800 mb-3">Repository</h4>
+                                <p class="text-sm text-slate-500 leading-relaxed">Once you commit, your pizza goes into
+                                    the oven—a permanent record. The repo stores all baked pizzas (commits) in history.
+                                </p>
+                            </div>
                         </div>
-                        <p class="mt-4 text-xs text-gray-400 italic" id="undo-explanation">
-                            Select a command to see how it affects the history above.
-                        </p>
                     </div>
-                    <div class="bg-black rounded p-3 text-green-400 h-full border border-gray-700">
-                        <div id="undo-terminal-output">$ _</div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <span class="text-2xl">📦</span> Delivery & Storage
+                            </h3>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div
+                                    class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                                    <div
+                                        class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-xl shrink-0">
+                                        🏠</div>
+                                    <div>
+                                        <strong class="block text-slate-800">Local Repo</strong>
+                                        <p class="text-sm text-slate-500">The oven in your own kitchen (your computer).
+                                        </p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                                    <div
+                                        class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shrink-0">
+                                        ☁️</div>
+                                    <div>
+                                        <strong class="block text-slate-800">Remote Repo (GitHub)</strong>
+                                        <p class="text-sm text-slate-500">The oven in the cloud pizza shop (internet
+                                            storage).</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="p-6 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-xl shrink-0">
+                                        📖</div>
+                                    <h4 class="text-lg font-bold text-slate-800">Kitchen Lingo</h4>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                                    <div class="flex flex-col">
+                                        <strong class="text-slate-800 font-bold">Commit:</strong>
+                                        <span class="text-slate-500">Photo of your pizza before serving.</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <strong class="text-slate-800 font-bold">Checkout:</strong>
+                                        <span class="text-slate-500">Recalling an old recipe.</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <strong class="text-slate-800 font-bold">Branch:</strong>
+                                        <span class="text-slate-500">Alternate recipe experiments.</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <strong class="text-slate-800 font-bold">Tag:</strong>
+                                        <span class="text-slate-500">Labels for the best recipes.</span>
+                                    </div>
+                                    <div class="sm:col-span-2 flex flex-col">
+                                        <strong class="text-slate-800 font-bold">HEAD:</strong>
+                                        <span class="text-slate-500">The pizza currently on your counter.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <span class="text-2xl">📝</span> The Recipe Card
+                            </h3>
+                            <div class="ascii-block text-sm">
+                                [ Working Tree ] ---&gt; [ Staging Area ] ---&gt; [ Local Repo ] ---&gt; [ Remote Repo ]
+                                (Your Countertop) (Pizza Peel) (Oven at Home) (Cloud Oven)
+
+                                Commands:
+                                - git status # Check pizza status
+                                - git add . # Put pizza on peel (stage changes)
+                                - git restore &lt;file&gt; # Remove toppings from peel (unstage)
+                                - git commit -m "msg" # Bake pizza in oven (save snapshot)
+                                - git push # Send pizza to cloud shop
+                                - git pull # Get new recipes from cloud
+                            </div>
+                            <div
+                                class="p-6 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-orange-900">Ready to start cooking?</h4>
+                                    <p class="text-sm text-orange-700">Follow the interactive labs below to master these
+                                        commands.</p>
+                                </div>
+                                <span class="text-4xl">🔥</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- SECTION 5: Quiz -->
-        <section id="quiz-section" class="bg-white rounded-xl shadow-lg border border-slate-200 p-8">
-            <div class="text-center mb-10">
-                <h2 class="text-2xl font-bold text-slate-800">Knowledge Check</h2>
-                <p class="text-slate-600">Test your retention of Week 1 concepts.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="md:col-span-2 space-y-6" id="quiz-container">
-                    <!-- Quiz Question Injected Here -->
-                    <div class="animate-pulse bg-slate-100 h-32 rounded-lg"></div>
+            <!-- Section 1: Workflow Simulator -->
+            <section id="workflow-section">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <span
+                            class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
+                        Interactive Kitchen (Workflow Simulator)
+                    </h2>
+                    <p class="text-slate-600 mt-2">Move ingredients from <strong>Countertop</strong> to the
+                        <strong>Cloud Oven</strong>.</p>
                 </div>
-
-                <div class="flex flex-col items-center justify-start space-y-4">
-                    <h3 class="font-bold text-slate-700">Your Progress</h3>
-                    <div class="chart-container" style="height: 200px; width: 200px;">
-                        <canvas id="quizChart"></canvas>
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 p-4 border-b border-slate-200 flex flex-wrap gap-4 justify-center">
+                        <button onclick="workflowAction('edit')"
+                            class="px-4 py-2 bg-white border border-slate-300 rounded hover:bg-slate-50 font-mono text-sm shadow-sm">Edit
+                            File</button>
+                        <button onclick="workflowAction('add')"
+                            class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-mono text-sm shadow-sm transition-colors">git
+                            add .</button>
+                        <button onclick="workflowAction('commit')"
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-mono text-sm shadow-sm transition-colors">git
+                            commit -m "..."</button>
+                        <button onclick="workflowAction('push')"
+                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-mono text-sm shadow-sm transition-colors">git
+                            push origin</button>
+                        <button onclick="workflowAction('reset')"
+                            class="px-4 py-2 text-slate-500 hover:text-red-500 text-sm ml-auto">Reset Kitchen</button>
                     </div>
-                    <div class="text-center">
+                    <div class="p-8 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-2 relative items-start">
+                        <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[160px] relative transition-colors"
+                            id="zone-working">
+                            <div
+                                class="absolute -top-3 left-4 bg-white px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Countertop</div>
+                            <div id="file-object"
+                                class="bg-slate-200 border border-slate-400 text-slate-700 p-3 rounded shadow mx-auto mt-6 text-center text-xs font-mono transition-all duration-500">
+                                🍕 pizza.html</div>
+                        </div>
+                        <div
+                            class="hidden lg:flex items-center justify-center text-slate-300 font-bold text-[10px] h-full pt-16">
+                            ADD</div>
+                        <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[160px] relative transition-colors"
+                            id="zone-staging">
+                            <div
+                                class="absolute -top-3 left-4 bg-white px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                The Peel</div>
+                            <div class="h-full flex items-center justify-center text-slate-300 text-[10px] italic text-center pt-10"
+                                id="staging-placeholder">Empty Peel</div>
+                        </div>
+                        <div
+                            class="hidden lg:flex items-center justify-center text-slate-300 font-bold text-[10px] h-full pt-16">
+                            COMMIT</div>
+                        <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[160px] relative transition-colors"
+                            id="zone-repo">
+                            <div
+                                class="absolute -top-3 left-4 bg-white px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Local Oven</div>
+                            <div class="space-y-2 mt-4" id="commit-stack">
+                                <div class="text-slate-300 text-[10px] italic text-center pt-6" id="repo-placeholder">No
+                                    Bakes</div>
+                            </div>
+                        </div>
+                        <div
+                            class="hidden lg:flex items-center justify-center text-slate-300 font-bold text-[10px] h-full pt-16">
+                            PUSH</div>
+                        <div class="border-2 border-dashed border-blue-200 rounded-lg p-4 min-h-[160px] relative transition-colors"
+                            id="zone-remote">
+                            <div
+                                class="absolute -top-3 left-4 bg-white px-2 text-[10px] font-bold text-blue-500 uppercase tracking-wider">
+                                Cloud Oven</div>
+                            <div class="space-y-2 mt-4" id="cloud-stack">
+                                <div class="text-blue-200 text-[10px] italic text-center pt-6" id="cloud-placeholder">
+                                    Empty Cloud</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 text-green-400 p-4 font-mono text-sm border-t border-slate-800"
+                        id="terminal-output">$ Ready to start cooking...</div>
+                </div>
+            </section>
+
+            <!-- Section 2: Branching -->
+            <section id="branching-section">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <span
+                            class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
+                        Branching
+                    </h2>
+                    <div class="mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">What is a Branch?</h3>
+                            <p class="text-slate-600 leading-relaxed">
+                                A branch in Git is like a separate line of development—a copy of your project where you
+                                can make changes without affecting the main code.
+                                Think of it as a <strong>parallel universe</strong> for your code:
+                            </p>
+                            <ul class="mt-4 space-y-2 text-slate-600 list-disc pl-5 text-sm">
+                                <li>You start from <strong>main</strong> (the stable version).</li>
+                                <li><strong>Create a branch</strong> for a feature or fix.</li>
+                                <li><strong>Work independently</strong>, commit changes, and later merge back into main
+                                    when ready.</li>
+                                <li>Branches let multiple developers work on different features at the same time, keep
+                                    the main branch clean, and avoid code freezes.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-orange-50 border-l-4 border-orange-400 p-4">
+                            <h3 class="font-bold text-orange-900 mb-1 text-sm">Why Branching Matters</h3>
+                            <p class="text-sm text-orange-800 leading-relaxed">
+                                Branching is Git’s superpower for collaboration and parallel development. It lets you
+                                work on multiple features without code freezes, enables teams worldwide to collaborate
+                                via GitHub, and keeps the main branch stable while experimenting on others.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">Feature Branch Workflow</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-4">
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="bg-slate-800 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                                            1</div>
+                                        <div><strong class="text-slate-800 block text-sm">Start from main</strong> <span
+                                                class="text-xs text-slate-500">Ensure your local and remote repos are
+                                                up-to-date.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="bg-slate-800 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                                            2</div>
+                                        <div><strong class="text-slate-800 block text-sm">Create a branch</strong> <span
+                                                class="text-xs text-slate-500"><code>git checkout -b feature-name</code>.</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="bg-slate-800 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                                            3</div>
+                                        <div><strong class="text-slate-800 block text-sm font-mono text-xs">Develop &
+                                                commit</strong> <span class="text-xs text-slate-500 font-mono">git add
+                                                .<br>git commit -m "feat: name"</span></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="bg-slate-800 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                                            4</div>
+                                        <div><strong class="text-slate-800 block text-sm">Open Pull Request</strong>
+                                            <span class="text-xs text-slate-500">Collaborate and review on
+                                                GitHub.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="bg-slate-800 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                                            5</div>
+                                        <div><strong class="text-slate-800 block text-sm">Merge to main</strong> <span
+                                                class="text-xs text-slate-500">Approval → Conflict Resolution →
+                                                Merge.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="bg-slate-800 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                                            6</div>
+                                        <div><strong class="text-slate-800 block text-sm">Clean up</strong> <span
+                                                class="text-xs text-slate-500">Delete the branch and pull latest
+                                                main.</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Branching Strategies and Best Practices -->
+            <section id="best-practices-section">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <span
+                            class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
+                        Branching Strategies and Best Practices
+                    </h2>
+                    <div class="mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="bg-blue-50 p-6 border-b border-blue-100">
+                            <h3 class="text-xl font-bold text-blue-900 mb-2">Adopt a Git Branching Strategy</h3>
+                            <p class="text-sm text-blue-800 leading-relaxed">
+                                A clear branching strategy keeps collaboration smooth and prevents history from becoming
+                                a "spaghetti mess." Follow these industry principles:
+                            </p>
+                        </div>
+
+                        <div class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div class="space-y-3">
+                                <div class="text-orange-500 text-2xl font-bold">01</div>
+                                <h4 class="font-bold text-slate-800">Keep it simple</h4>
+                                <ul class="text-sm text-slate-600 space-y-1 list-disc pl-4">
+                                    <li>Use feature branches for all new work.</li>
+                                    <li>Merge into <code>main</code> via pull requests.</li>
+                                    <li>Keep <code>main</code> clean, tested, and up-to-date.</li>
+                                </ul>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="text-orange-500 text-2xl font-bold">02</div>
+                                <h4 class="font-bold text-slate-800">Branch naming</h4>
+                                <p class="text-sm text-slate-600">Use clear conventions:</p>
+                                <div class="bg-slate-50 p-2 rounded font-mono text-[11px] text-slate-500">
+                                    feature/feature-name<br>
+                                    bugfix/description<br>
+                                    users/username/workitem
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="text-orange-500 text-2xl font-bold">03</div>
+                                <h4 class="font-bold text-slate-800">Pull requests</h4>
+                                <ul class="text-sm text-slate-600 space-y-1 list-disc pl-4">
+                                    <li>Always review before merging.</li>
+                                    <li>Include build/details for easy testing.</li>
+                                    <li>Aim for at least two reviewers.</li>
+                                </ul>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="text-orange-500 text-2xl font-bold">04</div>
+                                <h4 class="font-bold text-slate-800">Release branches</h4>
+                                <ul class="text-sm text-slate-600 space-y-1 list-disc pl-4">
+                                    <li>Create <code>release/x.y</code> for milestones.</li>
+                                    <li>Fix bugs in release branches.</li>
+                                    <li>Port changes back to main via cherry-pick.</li>
+                                </ul>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="text-orange-500 text-2xl font-bold">05</div>
+                                <h4 class="font-bold text-slate-800">Policies for main</h4>
+                                <ul class="text-sm text-slate-600 space-y-1 list-disc pl-4">
+                                    <li>Require PRs for all merges.</li>
+                                    <li>Require successful automated builds.</li>
+                                    <li>Use auto-added reviewers.</li>
+                                </ul>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="text-orange-500 text-2xl font-bold">06</div>
+                                <h4 class="font-bold text-slate-800">Tags vs branches</h4>
+                                <p class="text-sm text-slate-600">
+                                    Prefer branches for releases; tags are optional markers for specific commit points.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Merging -->
+            <section id="merging-section">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <span
+                            class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">4</span>
+                        Recipe Experiments (Merging)
+                    </h2>
+                    <p class="text-slate-600 mt-2">Bring alternate recipes back together.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <div class="flex justify-center mb-8">
+                        <div class="bg-slate-100 p-1 rounded-lg flex">
+                            <button onclick="setMergeType('fast-forward')" id="btn-ff"
+                                class="px-6 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-slate-800 transition-all">Fast-Forward</button>
+                            <button onclick="setMergeType('three-way')" id="btn-tw"
+                                class="px-6 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition-all">Three-Way
+                                Merge</button>
+                        </div>
+                    </div>
+                    <div class="relative h-[250px] w-full max-w-3xl mx-auto bg-slate-50 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center"
+                        id="graph-stage"></div>
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                        <h3 class="font-bold text-blue-900 text-sm mb-1" id="merge-title">Fast-Forward Merge</h3>
+                        <p class="text-sm text-blue-800" id="merge-desc"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Quiz -->
+            <section id="quiz-section"
+                class="bg-white rounded-xl shadow-lg border border-slate-200 p-8 transition-all duration-300">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl font-bold text-slate-800">Git & GitHub Knowledge Check</h2>
+                    <p class="text-slate-600">Technical competency assessment for Week 1.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2 space-y-6">
+                        <div id="quiz-container"></div>
+                        <div id="quiz-scorecard"
+                            class="hidden p-6 bg-slate-50 border border-slate-200 rounded-xl text-center animate-fadeIn">
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">Assessment Results</h3>
+                            <p class="text-slate-600" id="scorecard-text"></p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center space-y-4">
+                        <h3 class="font-bold text-slate-700">Live Progress</h3>
+                        <div class="chart-container" style="height: 200px; width: 200px;">
+                            <canvas id="quizChart"></canvas>
+                            <div id="completion-check"
+                                class="absolute top-1/2 left-1/2 flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-lg shadow-lg">
+                                <span class="text-3xl">✔</span>
+                            </div>
+                        </div>
                         <div class="text-3xl font-bold text-slate-800" id="score-display">0%</div>
-                        <div class="text-xs text-slate-500">Correct Answers</div>
+                        <div class="flex flex-col gap-1 w-full mt-2">
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div> Outer: Progress (Answered)
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div> Inner: Correct Answers
+                            </div>
+                        </div>
+                        <button onclick="resetQuiz()" class="text-sm text-slate-500 underline mt-4">Restart
+                            Assessment</button>
                     </div>
-                    <button onclick="resetQuiz()"
-                        class="text-sm text-slate-500 hover:text-orange-500 underline mt-2">Reset Quiz</button>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
+
+        <!-- PLACEHOLDER PAGES -->
+        <div id="page-projects" class="page-view space-y-12">
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                <h2 class="text-3xl font-bold text-slate-800">GitHub Projects</h2>
+                <p class="text-slate-600 mt-4 italic">Planning and management content coming soon.</p>
+            </section>
+        </div>
+        <div id="page-actions" class="page-view space-y-12">
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                <h2 class="text-3xl font-bold text-slate-800">GitHub Actions</h2>
+                <p class="text-slate-600 mt-4 italic">Automated CI/CD workflows content coming soon.</p>
+            </section>
+        </div>
+        <div id="page-security" class="page-view space-y-12">
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                <h2 class="text-3xl font-bold text-slate-800">GitHub Security</h2>
+                <p class="text-slate-600 mt-4 italic">Vulnerability scanning and secrets content coming soon.</p>
+            </section>
+        </div>
+        <div id="page-administration" class="page-view space-y-12">
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                <h2 class="text-3xl font-bold text-slate-800">GitHub Administration</h2>
+                <p class="text-slate-600 mt-4 italic">Organization and settings management content coming soon.</p>
+            </section>
+        </div>
 
     </main>
 
     <footer class="bg-slate-50 border-t border-slate-200 py-8 text-center text-slate-500 text-sm">
-        <p>Bootcamp Week 1 Resources | Based on Git & GitHub Fundamentals Study Guide</p>
+        <p>Git Bootcamp Resources | Technical Assessment Module</p>
     </footer>
 
-    <!-- Scripts -->
     <script>
-        // --- SECTION 1: Workflow Logic ---
-        const workflowState = {
-            status: 'clean', // clean, modified, staged, committed
-            location: 'repo' // working, staging, repo
-        };
+        // SPA Navigation Logic
+        function navigateTo(pageId) {
+            const views = document.querySelectorAll('.page-view');
+            views.forEach(v => v.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
 
+            const navButtons = document.querySelectorAll('.nav-tile');
+            navButtons.forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById('nav-' + pageId);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            window.scrollTo(0, 0);
+
+            if (pageId === 'git-concepts' && !qChart) {
+                initQuiz();
+            }
+        }
+
+        // Workflow Logic
+        const workflowState = { status: 'clean' };
         function workflowAction(action) {
             const fileObj = document.getElementById('file-object');
-            const fileStatus = document.getElementById('file-status');
             const term = document.getElementById('terminal-output');
             const staging = document.getElementById('staging-placeholder');
-            const stack = document.getElementById('commit-stack');
+            const localStack = document.getElementById('commit-stack');
+            const cloudStack = document.getElementById('cloud-stack');
 
             if (action === 'edit') {
                 workflowState.status = 'modified';
-                fileObj.classList.remove('bg-slate-200');
-                fileObj.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
-                fileStatus.innerText = 'Modified (Untracked changes)';
-                term.innerText = '$ echo "<h2>New Title</h2>" >> index.html';
-
-                // Visual move
-                document.getElementById('zone-working').classList.add('bg-red-50');
+                fileObj.classList.add('bg-red-100', 'text-red-800');
+                term.innerText = '$ echo "New Recipe Layer" >> pizza.html';
             }
             else if (action === 'add') {
-                if (workflowState.status !== 'modified') {
-                    term.innerText = '$ Error: No changes to stage. Edit the file first.';
-                    return;
-                }
+                if (workflowState.status !== 'modified') return;
                 workflowState.status = 'staged';
-                fileObj.classList.remove('bg-red-100', 'border-red-300', 'text-red-800');
-                fileObj.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
-                fileStatus.innerText = 'Staged (Ready to commit)';
                 term.innerText = '$ git add .';
-
-                // Move visual
                 fileObj.style.opacity = '0';
                 setTimeout(() => {
-                    fileObj.style.opacity = '1';
                     staging.innerHTML = '';
-                    staging.appendChild(fileObj.cloneNode(true));
-                    staging.firstElementChild.style.opacity = '1';
-                    staging.firstElementChild.style.marginTop = '0';
-                    fileObj.style.display = 'none'; // Hide original
+                    const stagedFile = fileObj.cloneNode(true);
+                    stagedFile.style.opacity = '1';
+                    stagedFile.classList.remove('bg-red-100', 'text-red-800');
+                    stagedFile.classList.add('bg-yellow-100');
+                    staging.appendChild(stagedFile);
+                    fileObj.style.display = 'none';
                 }, 300);
             }
             else if (action === 'commit') {
                 if (workflowState.status !== 'staged') {
-                    term.innerText = '$ Error: Nothing staged to commit. Run git add first.';
+                    term.innerText = '$ Error: The peel is empty! Use "git add" first.';
                     return;
                 }
                 workflowState.status = 'committed';
-                term.innerText = '$ git commit -m "Update title"';
+                term.innerText = '$ git commit -m "Baking pizza..."';
 
-                // Visual
-                const stagedFile = staging.firstElementChild;
-                if (stagedFile) stagedFile.style.transform = 'scale(0.5) translate(200px, 0)';
+                const placeholder = document.getElementById('repo-placeholder');
+                if (placeholder) placeholder.remove();
 
                 setTimeout(() => {
-                    staging.innerHTML = 'Empty (Box Open)';
+                    staging.innerHTML = '<span class="text-slate-300 text-[10px] italic text-center pt-10">Empty Peel</span>';
                     const newCommit = document.createElement('div');
-                    newCommit.className = 'bg-slate-800 text-white p-2 rounded text-xs font-mono text-center mb-1 animate-bounce';
-                    newCommit.innerText = 'Commit: Update title';
-                    stack.prepend(newCommit);
+                    newCommit.className = 'bg-slate-800 text-white p-2 rounded text-[10px] mb-1 font-mono transition-all duration-500';
+                    newCommit.innerText = 'Baked: Commit ' + (localStack.children.length + 1).toString().padStart(3, '0');
+                    localStack.prepend(newCommit);
 
-                    // Reset working dir visual
                     fileObj.style.display = 'block';
-                    fileObj.classList.remove('bg-green-100', 'border-green-300', 'text-green-800');
-                    fileObj.classList.add('bg-slate-200', 'border-slate-400', 'text-slate-700');
-                    fileStatus.innerText = 'Clean';
-                    document.getElementById('zone-working').classList.remove('bg-red-50');
+                    fileObj.style.opacity = '1';
+                    fileObj.className = 'bg-slate-200 border border-slate-400 text-slate-700 p-3 rounded shadow mx-auto mt-6 text-center text-xs font-mono transition-all duration-500';
+                    workflowState.status = 'clean';
                 }, 500);
             }
             else if (action === 'push') {
-                if (stack.children.length < 2) {
-                    term.innerText = '$ git push origin... (Everything up-to-date)';
+                if (localStack.children.length === 0 || (localStack.children.length === 1 && localStack.innerText.includes('No Bakes'))) {
+                    term.innerText = '$ Error: No baked pizzas in the Local Oven to push!';
                     return;
                 }
-                term.innerText = '$ git push origin main... Success!';
-                Array.from(stack.children).forEach(child => {
-                    child.classList.add('border', 'border-purple-400');
-                    child.innerText += ' (Remote)';
-                });
+                term.innerText = '$ git push origin main... Delivering to Cloud shop!';
+                const cloudPlaceholder = document.getElementById('cloud-placeholder');
+                if (cloudPlaceholder) cloudPlaceholder.remove();
+                const latestCommit = localStack.firstElementChild;
+                if (latestCommit) {
+                    latestCommit.style.transform = 'translateY(-20px) scale(0.8)';
+                    latestCommit.style.opacity = '0';
+                    setTimeout(() => {
+                        const cloudCommit = latestCommit.cloneNode(true);
+                        cloudCommit.style.opacity = '1';
+                        cloudCommit.style.transform = 'scale(1)';
+                        cloudCommit.classList.remove('bg-slate-800');
+                        cloudCommit.classList.add('bg-blue-600', 'border', 'border-blue-400');
+                        cloudCommit.innerText = cloudCommit.innerText.replace('Baked:', 'Cloud:');
+                        cloudStack.prepend(cloudCommit);
+                        latestCommit.style.transform = 'scale(1)';
+                        latestCommit.style.opacity = '0.4';
+                        latestCommit.classList.add('italic');
+                        latestCommit.innerText += ' (Pushed)';
+                    }, 500);
+                }
             }
             else if (action === 'reset') {
-                location.reload(); // Simple reset
+                location.reload();
             }
         }
 
-        // --- SECTION 2: Merging Visualizer ---
+        // Merging logic
         function setMergeType(type) {
             const stage = document.getElementById('graph-stage');
             const title = document.getElementById('merge-title');
             const desc = document.getElementById('merge-desc');
             const btnFF = document.getElementById('btn-ff');
             const btnTW = document.getElementById('btn-tw');
-
-            // Toggle Button Styles
             if (type === 'fast-forward') {
-                btnFF.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-                btnFF.classList.remove('text-slate-500');
-                btnTW.classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
-                btnTW.classList.add('text-slate-500');
-
-                // Content
+                btnFF.className = "px-6 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-slate-800";
+                btnTW.className = "px-6 py-2 rounded-md text-sm font-medium text-slate-500";
                 title.innerText = 'Fast-Forward Merge';
-                desc.innerHTML = 'The <code>main</code> branch pointer just moves forward. History is a straight line.';
-
-                // HTML Graph for Fast Forward
-                stage.innerHTML = `
-                    <div class="flex items-center gap-4 relative">
-                        <div class="w-full h-1 bg-slate-300 absolute top-1/2 left-0 z-0"></div>
-                        <div class="w-8 h-8 rounded-full bg-slate-400 z-10 relative group cursor-pointer git-node"><span class="absolute -bottom-6 left-0 text-xs text-slate-400 w-20">Initial</span></div>
-                        <div class="w-8 h-8 rounded-full bg-slate-400 z-10 relative group cursor-pointer git-node"></div>
-                        <div class="w-8 h-8 rounded-full bg-orange-500 z-10 relative group cursor-pointer git-node border-4 border-white shadow-lg">
-                            <span class="absolute -top-8 -left-4 bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded font-mono font-bold whitespace-nowrap">HEAD -> main</span>
-                        </div>
-                    </div>
-                `;
+                desc.innerHTML = 'No divergent changes. The <code>main</code> recipe simply adopts the new experiment.';
+                stage.innerHTML = `<div class="relative w-full h-1 bg-slate-300 max-w-lg"><div class="git-dot absolute top-[-5px] left-[20%]"></div><div class="git-dot absolute top-[-5px] left-[50%]"></div><div class="git-dot absolute top-[-5px] left-[80%] bg-[#f05032] border-4 border-white shadow"></div><div class="absolute top-4 left-[80%] text-[10px] font-bold">main (HEAD)</div></div>`;
             } else {
-                btnTW.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-                btnTW.classList.remove('text-slate-500');
-                btnFF.classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
-                btnFF.classList.add('text-slate-500');
-
-                // Content
+                btnTW.className = "px-6 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-slate-800";
+                btnFF.className = "px-6 py-2 rounded-md text-sm font-medium text-slate-500";
                 title.innerText = 'Three-Way Merge';
-                desc.innerHTML = 'Histories diverged. Git creates a special <strong>Merge Commit</strong> to join the two separate timeline tracks together.';
-
-                // HTML Graph for Three-Way
-                stage.innerHTML = `
-                    <div class="relative w-full h-full flex items-center justify-center">
-                        <!-- Main Track -->
-                        <div class="absolute h-1 bg-slate-300 w-3/4 top-1/2 -translate-y-4"></div>
-                        <!-- Branch Track -->
-                        <div class="absolute h-1 bg-blue-300 w-1/3 top-1/2 translate-y-4 left-1/4 rounded-b-lg border-l-2 border-b-2 border-slate-300 rounded-bl-xl origin-top-left rotate-0" style="height: 30px; border:none; background:none;">
-                            <svg width="300" height="60" style="position:absolute; top: -10px; left:0;">
-                                <path d="M 0 0 Q 30 40 60 40 L 180 40 Q 210 40 240 0" stroke="#94a3b8" stroke-width="3" fill="none" />
-                            </svg>
-                        </div>
-
-                        <!-- Nodes -->
-                        <div class="absolute left-[15%] top-[calc(50%-28px)] w-8 h-8 rounded-full bg-slate-400 z-10"></div> <!-- Split point -->
-                        
-                        <div class="absolute left-[35%] top-[calc(50%-28px)] w-8 h-8 rounded-full bg-orange-400 z-10 border-2 border-white" title="Main Commit"></div> 
-                        <div class="absolute left-[45%] top-[calc(50%+12px)] w-8 h-8 rounded-full bg-blue-400 z-10 border-2 border-white" title="Feature Commit"></div>
-                        
-                        <div class="absolute left-[70%] top-[calc(50%-28px)] w-8 h-8 rounded-full bg-purple-500 z-10 border-4 border-white shadow-lg git-node">
-                             <span class="absolute -top-8 -left-8 bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded font-mono font-bold whitespace-nowrap">Merge Commit</span>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        // Initialize
-        setMergeType('fast-forward');
-
-
-        // --- SECTION 3: Conflict Logic ---
-        function resolveConflict(choice) {
-            const editor = document.getElementById('editor-content');
-            const feedback = document.getElementById('conflict-feedback');
-
-            let newContent = '';
-
-            if (choice === 'current') {
-                newContent = `
-                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                    <div class="code-line text-green-400 bg-green-900/30">&lt;h1&gt;[Your Name] | Lead Developer&lt;/h1&gt;</div>
-                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                `;
-                feedback.innerText = 'Resolved: Kept "Lead Developer" (HEAD). Run "git add" next!';
-            } else if (choice === 'incoming') {
-                newContent = `
-                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                    <div class="code-line text-blue-400 bg-blue-900/30">&lt;h1&gt;Welcome to the Creative Lab&lt;/h1&gt;</div>
-                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                `;
-                feedback.innerText = 'Resolved: Kept "Creative Lab" (Incoming). Run "git add" next!';
-            } else {
-                newContent = `
-                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                    <div class="code-line text-green-400">&lt;h1&gt;[Your Name] | Lead Developer&lt;/h1&gt;</div>
-                    <div class="code-line text-blue-400">&lt;h1&gt;Welcome to the Creative Lab&lt;/h1&gt;</div>
-                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
-                `;
-                feedback.innerText = 'Resolved: Kept Both. A bit crowded, but conflict gone!';
-            }
-
-            editor.innerHTML = newContent;
-            feedback.classList.remove('hidden');
-        }
-
-        // --- SECTION 4: Undo Logic ---
-        function runUndoCommand(cmd) {
-            const historyList = document.getElementById('undo-history');
-            const output = document.getElementById('undo-terminal-output');
-            const explanation = document.getElementById('undo-explanation');
-
-            if (cmd === 'revert') {
-                // Revert adds a new commit
-                output.innerText = '$ git revert c3d4e5f\n[main d5e6f7g] Revert "Added I AM A POTATO title"\n 1 file changed, 1 deletion(-)';
-                explanation.innerText = "Notice: A NEW commit was created to cancel the mistake. History is preserved. Safe for teams.";
-
-                const newCommit = document.createElement('li');
-                newCommit.className = 'text-green-400 font-bold border-l-2 border-green-500 pl-2';
-                newCommit.innerText = 'd5e6f7g (HEAD -> main) Revert "Added I AM A POTATO title"';
-                historyList.prepend(newCommit);
-
-                // Update old HEAD style
-                historyList.children[1].className = 'text-gray-400 line-through decoration-red-500';
-            }
-            else if (cmd === 'reset') {
-                // Reset deletes history
-                output.innerText = '$ git reset --hard HEAD~1\nHEAD is now at b2c3d4e Added contact section';
-                explanation.innerText = "Notice: The top commit completely VANISHED. Dangerous if you pushed, but great for local cleanup.";
-
-                if (historyList.children.length > 0) {
-                    historyList.removeChild(historyList.firstElementChild);
-                    historyList.firstElementChild.className = 'text-yellow-400 font-bold';
-                    historyList.firstElementChild.innerText = historyList.firstElementChild.innerText.replace(' (HEAD -> main)', '') + ' (HEAD -> main)';
-                }
+                desc.innerHTML = 'Histories clashed. A new <strong>Merge Commit</strong> is needed.';
+                stage.innerHTML = `<div class="relative w-full h-40 max-w-lg flex items-center"><div class="absolute w-[80%] h-1 bg-slate-200 left-[10%]"></div><div class="absolute w-[40%] h-1 bg-blue-300 left-[30%] -translate-y-8"></div><div class="git-dot absolute left-[10%]"></div><div class="git-dot absolute left-[30%]"></div><div class="git-dot absolute left-[70%] bg-purple-600 border-4 border-white shadow"></div></div>`;
             }
         }
 
-        // --- SECTION 5: Quiz Logic ---
+        // Quiz Logic - Reverted to Full Assessment Questions
         const quizData = [
             {
-                q: "What is the primary purpose of the 'Staging Area'?",
-                options: ["To auto-save files", "To act as a loading zone for the next commit", "To host code online"],
-                a: 1 // Index of correct
+                q: "In the Git workflow, what is the primary purpose of the 'Staging Area'?",
+                options: [
+                    "To serve as a temporary 'loading zone' where you choose which changes to include in the next commit.",
+                    "To automatically save every keystroke you make in your text editor.",
+                    "To host your code on a public server so others can see it.",
+                    "To permanently delete files that you no longer want in your project history."
+                ],
+                a: 0,
+                rationale: "The staging area allows developers to carefully select specific changes to group together into a single, logical commit."
             },
             {
-                q: "What causes a Merge Conflict?",
-                options: ["Editing the same line in different branches", "Forgetting to git add", "Network errors"],
-                a: 0
+                q: "Which command allows you to create a new branch called 'feature-fix' and switch to it at the same time?",
+                options: [
+                    "git checkout -b feature-fix",
+                    "git branch feature-fix",
+                    "git merge feature-fix",
+                    "git commit -m 'feature-fix'"
+                ],
+                a: 0,
+                rationale: "The -b flag stands for 'branch' and combines the creation and checkout actions into one step."
             },
             {
-                q: "Which undo command creates a NEW commit to fix a mistake?",
-                options: ["git reset", "git undo", "git revert"],
-                a: 2
+                q: "What is the most common cause of a 'Merge Conflict' in Git?",
+                options: [
+                    "When two different branches have modified the exact same line of the same file.",
+                    "When you try to commit a file that hasn't been added to the staging area yet.",
+                    "When you have more than five branches in a single local repository.",
+                    "When you lose your internet connection while running a git push command."
+                ],
+                a: 0,
+                rationale: "Git cannot automatically decide which version is correct when the same line is contested, requiring human intervention."
             },
             {
-                q: "What does HEAD refer to?",
-                options: ["The main server", "Your current location in history", "The first commit"],
-                a: 1
+                q: "Inside a file with a merge conflict, what does the marker <<<<<<< HEAD indicate?",
+                options: [
+                    "The beginning of the changes present on your current, active branch.",
+                    "The changes coming from the external branch you are trying to merge in.",
+                    "A line of code that Git has determined is a syntax error.",
+                    "The end of the file where the conflict was successfully resolved."
+                ],
+                a: 0,
+                rationale: "In Git, 'HEAD' refers to the branch you are currently standing on during the merge attempt."
+            },
+            {
+                q: "When visualizing history with git log --graph --oneline, what does a 'Fast-Forward' merge look like?",
+                options: [
+                    "A straight vertical line where the pointer simply moves up to the latest commit.",
+                    "Two lines that split apart and then curve back together at a 'Merge Commit' node.",
+                    "A series of red 'X' marks indicating that the merge was aborted.",
+                    "A dotted line indicating that the changes were pushed to a remote server."
+                ],
+                a: 0,
+                rationale: "Fast-forward merges occur when there is a direct linear path between the two branches, so no divergent 'tracks' are needed."
+            },
+            {
+                q: "Which command is used to link your local repository to a specific 'showroom' or repository on GitHub?",
+                options: [
+                    "git remote add origin <url>",
+                    "git init <url>",
+                    "git clone origin",
+                    "git push origin main"
+                ],
+                a: 0,
+                rationale: "This command defines a name ('origin') for a remote URL so Git knows where to send your code."
+            },
+            {
+                q: "In a professional setting, what is the primary goal of a 'Pull Request' (PR)?",
+                options: [
+                    "To notify teammates of your changes and request a code review before merging into the main branch.",
+                    "To force your local code to overwrite whatever is currently on the GitHub server.",
+                    "To delete all the branches in your local repository to clean up your workspace.",
+                    "To change your GitHub username or profile settings."
+                ],
+                a: 0,
+                rationale: "Pull Requests facilitate collaboration, quality control, and discussion before code is integrated into a shared project."
+            },
+            {
+                q: "You have made changes to your code. What is the correct sequence of commands to save these changes and send them to GitHub?",
+                options: [
+                    "git add . → git commit -m 'message' → git push",
+                    "git push → git add . → git commit -m 'message'",
+                    "git commit -m 'message' → git push → git add .",
+                    "git add . → git push → git commit -m 'message'"
+                ],
+                a: 0,
+                rationale: "This follows the standard lifecycle: stage the changes, record the snapshot, and upload to the remote server."
+            },
+            {
+                q: "What happens when you run 'git pull'?",
+                options: [
+                    "It fetches changes from the remote repository and immediately tries to merge them into your local branch.",
+                    "It deletes your local code and replaces it with a fresh copy from GitHub.",
+                    "It sends your local commits to the remote server for others to see.",
+                    "It creates a new branch on GitHub that matches your current local branch."
+                ],
+                a: 0,
+                rationale: "Git pull is a combination of 'fetch' (downloading) and 'merge' (integrating) in a single command."
+            },
+            {
+                q: "What is the benefit of using an 'Alias' like the 'git adog' command we created?",
+                options: [
+                    "It creates a short, easy-to-remember shortcut for a long and complex Git command.",
+                    "It improves the performance of Git so that commits happen 50% faster.",
+                    "It allows you to use Git without having to install it on your computer.",
+                    "It encrypts your commit messages so that only you can read them."
+                ],
+                a: 0,
+                rationale: "Aliases improve productivity by reducing the typing required for frequent, detailed commands like a graphical log."
             }
         ];
 
-        let currentQ = 0;
-        let score = 0;
-        let quizChartInstance = null;
-
+        let curQ = 0, score = 0, qChart = null, answered = false;
         function initQuiz() {
-            renderQuestion();
-            initChart();
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('quizChart').getContext('2d');
-            quizChartInstance = new Chart(ctx, {
+            const canvas = document.getElementById('quizChart');
+            if (!canvas) return;
+            renderQ();
+            const ctx = canvas.getContext('2d');
+            qChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Correct', 'Remaining'],
-                    datasets: [{
-                        data: [0, quizData.length],
-                        backgroundColor: ['#22c55e', '#e2e8f0'],
-                        borderWidth: 0
-                    }]
+                    datasets: [
+                        { label: 'Overall Progress', data: [0, 10], backgroundColor: ['#3b82f6', '#f1f5f9'], borderWidth: 0, weight: 1 },
+                        { label: 'Correct Answers', data: [0, 10], backgroundColor: ['#22c55e', '#f1f5f9'], borderWidth: 0, weight: 0.6 }
+                    ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '50%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
             });
         }
-
-        function renderQuestion() {
+        function renderQ() {
+            answered = false;
             const container = document.getElementById('quiz-container');
-            if (currentQ >= quizData.length) {
-                container.innerHTML = `
-                    <div class="bg-green-50 p-6 rounded-lg text-center">
-                        <h3 class="text-xl font-bold text-green-800">Quiz Complete!</h3>
-                        <p class="text-green-600 mt-2">You scored ${score} out of ${quizData.length}.</p>
-                        <p class="mt-4 text-sm text-slate-500">Ready for Week 2?</p>
-                    </div>
-                `;
+            const scorecard = document.getElementById('quiz-scorecard');
+            const quizSection = document.getElementById('quiz-section');
+            if (curQ >= 10) {
+                container.classList.add('hidden');
+                scorecard.classList.remove('hidden');
+                document.getElementById('scorecard-text').innerHTML = `Score: <strong>${score}/10</strong> (${(score / 10) * 100}%).`;
+                document.getElementById('completion-check').classList.add('show');
+                quizSection.classList.add('quiz-complete-flash');
                 return;
             }
-
-            const q = quizData[currentQ];
-            let html = `
-                <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
-                    <div class="text-xs text-slate-400 uppercase font-bold mb-2">Question ${currentQ + 1}/${quizData.length}</div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-4">${q.q}</h3>
-                    <div class="space-y-2">
-            `;
-
-            q.options.forEach((opt, idx) => {
-                html += `<button onclick="answerQuiz(${idx})" class="w-full text-left p-3 bg-white border border-slate-200 rounded hover:border-orange-400 hover:text-orange-600 transition-colors text-sm text-slate-600">${opt}</button>`;
-            });
-
-            html += `</div></div>`;
-            container.innerHTML = html;
+            container.classList.remove('hidden');
+            scorecard.classList.add('hidden');
+            const q = quizData[curQ];
+            container.innerHTML = `
+                <div class="p-6 bg-slate-50 rounded border border-slate-200 shadow-sm transition-all">
+                    <div class="text-xs font-bold text-slate-400 uppercase mb-2">Question ${curQ + 1}/10</div>
+                    <h4 class="text-lg font-bold text-slate-800 mb-4">${q.q}</h4>
+                    <div class="grid grid-cols-1 gap-3" id="options-list">
+                        ${q.options.map((o, i) => `<button onclick="ans(${i})" id="opt-${i}" class="w-full text-left p-3 border rounded bg-white hover:border-orange-400 hover:text-orange-600 transition-all text-sm">${o}</button>`).join('')}
+                    </div>
+                    <div id="explanation-box" class="mt-6 hidden animate-fadeIn">
+                        <div class="p-4 rounded-lg text-sm border" id="expl-style">
+                            <strong id="expl-status"></strong>
+                            <p class="mt-2 text-slate-600">${q.rationale}</p>
+                            <button onclick="nextQ()" class="mt-4 px-4 py-2 bg-slate-800 text-white rounded text-xs font-bold">Next Question ➜</button>
+                        </div>
+                    </div>
+                </div>`;
         }
-
-        function answerQuiz(choice) {
-            const correct = quizData[currentQ].a === choice;
+        function ans(i) {
+            if (answered) return;
+            answered = true;
+            const q = quizData[curQ];
+            const correct = (i === q.a);
             if (correct) score++;
-
-            // Update Chart
-            quizChartInstance.data.datasets[0].data = [score, quizData.length - score];
-            quizChartInstance.update();
-            document.getElementById('score-display').innerText = Math.round((score / quizData.length) * 100) + '%';
-
-            currentQ++;
-            renderQuestion();
+            const chosenBtn = document.getElementById(`opt-${i}`);
+            const correctBtn = document.getElementById(`opt-${q.a}`);
+            if (correct) chosenBtn.classList.add('border-green-500', 'bg-green-50', 'text-green-700', 'border-2');
+            else {
+                chosenBtn.classList.add('border-red-500', 'bg-red-50', 'text-red-700', 'border-2');
+                correctBtn.classList.add('border-green-500', 'bg-green-50', 'text-green-700', 'border-2');
+            }
+            document.getElementById('explanation-box').classList.remove('hidden');
+            const status = document.getElementById('expl-status');
+            status.innerText = correct ? "✓ Correct!" : "✕ Incorrect";
+            status.className = correct ? "text-green-700 font-bold" : "text-red-700 font-bold";
+            qChart.data.datasets[0].data = [curQ + 1, 10 - (curQ + 1)];
+            qChart.data.datasets[1].data = [score, 10 - score];
+            qChart.update();
+            document.getElementById('score-display').innerText = (score * 10) + '%';
         }
-
-        function resetQuiz() {
-            currentQ = 0;
-            score = 0;
-            quizChartInstance.data.datasets[0].data = [0, quizData.length];
-            quizChartInstance.update();
-            document.getElementById('score-display').innerText = '0%';
-            renderQuestion();
-        }
-
-        // Start
-        initQuiz();
-
+        function nextQ() { curQ++; renderQ(); }
+        function resetQuiz() { curQ = 0; score = 0; location.reload(); }
+        window.onload = function () {
+            setMergeType('fast-forward');
+            navigateTo('home');
+        };
     </script>
 </body>
 
