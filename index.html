@@ -1,14 +1,762 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>My Portfolio</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git & GitHub Mastery | Interactive Learning Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Custom styles for elements not easily handled by Tailwind utilities alone */
+        body {
+            background-color: #fdfbf7;
+            /* Warm neutral background */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1f2937;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .git-node {
+            transition: all 0.3s ease;
+        }
+
+        .git-node:hover {
+            transform: scale(1.1);
+        }
+
+        .connector {
+            position: absolute;
+            background-color: #cbd5e1;
+            z-index: 0;
+            transition: all 0.5s ease;
+        }
+
+        /* Conflict Editor Styles */
+        .code-line {
+            font-family: 'Courier New', Courier, monospace;
+            padding: 2px 8px;
+            border-left: 3px solid transparent;
+        }
+
+        .conflict-marker {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .conflict-content-a {
+            background-color: #ecfdf5;
+            /* Green tint */
+        }
+
+        .conflict-content-b {
+            background-color: #eff6ff;
+            /* Blue tint */
+        }
+
+        .terminal-text {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Background: #fdfbf7) with Git Accents (Orange: #f05032, Slate: #475569) -->
+    <!-- Application Structure Plan: 
+         1. Header: Title and user context.
+         2. Workflow Simulator: Interactive "Assembly Line" to visualize Add -> Commit -> Push.
+         3. Branching & Merging: Interactive HTML-based graphs switching between Fast-Forward and Three-Way merges to visualize the "Train Tracks".
+         4. Conflict Lab: A simulated code editor to practice resolving merge conflicts safely.
+         5. Time Travel Console: A terminal simulation for Revert vs. Reset.
+         6. Quiz Section: Dynamic assessment with Chart.js visualization of results.
+         Rationale: This structure breaks abstract concepts into tangible "labs" (Assembly, Graph, Editor, Terminal) maximizing active learning.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Git Graphs: HTML/CSS Flex/Grid diagrams. Library charts are poor for tree structures without complex plugins. HTML allows accessible, interactive nodes.
+         2. Quiz Results: Chart.js Doughnut chart. Goal: Inform/Reward. Justification: Standard way to visualize part-to-whole success rates.
+         3. Conflict Editor: Styled HTML Divs. Goal: Change/Interact. Justification: Simulates the VS Code experience described in the guide.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 
-<body>
-    <h1>Welcome to Himanshu's Amazing Tutorial Sessions</h1>
-    <p>I am your DevOps Learning Buddy</p>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-800 text-white p-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-[#f05032]">Git & GitHub <span
+                        class="text-white">Command Center</span></h1>
+                <p class="text-slate-400 mt-1">Week 1 Interactive Study Guide & Simulation</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-4">
+                <div class="text-center px-4 py-2 bg-slate-700 rounded-lg">
+                    <span class="block text-xs text-slate-400 uppercase">Current Branch</span>
+                    <span class="font-mono text-green-400 font-bold">main</span>
+                </div>
+                <div class="text-center px-4 py-2 bg-slate-700 rounded-lg">
+                    <span class="block text-xs text-slate-400 uppercase">Status</span>
+                    <span id="global-status" class="font-mono text-yellow-400 font-bold">Clean</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full p-4 space-y-12 my-8">
+
+        <!-- Intro Text -->
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">Welcome to Your Workspace</h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                Mastering Git is about understanding the flow of data. This dashboard transforms the abstract commands
+                from your study guide into interactive simulations.
+                You will explore the <strong>Three Pillars of Git</strong>, visualize <strong>Branching
+                    Strategies</strong>, practice resolving <strong>Merge Conflicts</strong>, and learn how to safely
+                <strong>Undo Mistakes</strong>.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div class="p-4 bg-orange-50 rounded-lg border border-orange-100">
+                    <h3 class="font-bold text-orange-800 mb-2">Key Concept: The Repo</h3>
+                    <p class="text-sm text-slate-600">A folder containing your project files and their full history.
+                        It's your project's time capsule.</p>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 class="font-bold text-blue-800 mb-2">Key Concept: The Commit</h3>
+                    <p class="text-sm text-slate-600">A permanent "save point" snapshot. Identified by a unique SHA hash
+                        (e.g., <code>7a2b3c4</code>).</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <h3 class="font-bold text-green-800 mb-2">Key Concept: HEAD</h3>
+                    <p class="text-sm text-slate-600">A pointer to your current location in the Git timeline. It says
+                        "You are here".</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 1: The Git Lifecycle (Workflow) -->
+        <section id="workflow-section">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <span
+                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
+                    The Git Lifecycle
+                </h2>
+                <p class="text-slate-600 mt-2">
+                    Understand the separation between your <strong>Working Directory</strong>, <strong>Staging
+                        Area</strong>, and <strong>Local Repository</strong>.
+                    Click the buttons below to move the file through the lifecycle.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <!-- Controls -->
+                <div class="bg-slate-50 p-4 border-b border-slate-200 flex flex-wrap gap-4 justify-center">
+                    <button onclick="workflowAction('edit')"
+                        class="px-4 py-2 bg-white border border-slate-300 rounded hover:bg-slate-50 font-mono text-sm shadow-sm">Edit
+                        File</button>
+                    <button onclick="workflowAction('add')"
+                        class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-mono text-sm shadow-sm transition-colors">git
+                        add .</button>
+                    <button onclick="workflowAction('commit')"
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-mono text-sm shadow-sm transition-colors">git
+                        commit -m "..."</button>
+                    <button onclick="workflowAction('push')"
+                        class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-mono text-sm shadow-sm transition-colors">git
+                        push origin</button>
+                    <button onclick="workflowAction('reset')"
+                        class="px-4 py-2 text-slate-500 hover:text-red-500 text-sm ml-auto">Reset Demo</button>
+                </div>
+
+                <!-- Visualization Area -->
+                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+                    <!-- Zone 1: Working Dir -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[200px] relative transition-colors"
+                        id="zone-working">
+                        <div
+                            class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Working Directory</div>
+                        <div id="file-object"
+                            class="bg-slate-200 border border-slate-400 text-slate-700 p-3 rounded shadow w-3/4 mx-auto mt-8 text-center text-sm font-mono transition-all duration-500">
+                            📄 index.html
+                            <div class="text-[10px] mt-1 text-slate-500" id="file-status">Clean</div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:flex items-center justify-center text-slate-300">➜</div>
+
+                    <!-- Zone 2: Staging -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[200px] relative transition-colors"
+                        id="zone-staging">
+                        <div
+                            class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Staging Area</div>
+                        <div class="h-full flex items-center justify-center text-slate-300 text-sm italic"
+                            id="staging-placeholder">Empty (Box Open)</div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:flex items-center justify-center text-slate-300">➜</div>
+
+                    <!-- Zone 3: Repository (Local & Remote) -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 min-h-[200px] relative transition-colors md:col-span-1"
+                        id="zone-repo">
+                        <div
+                            class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Local Repository</div>
+                        <div class="space-y-2 mt-4" id="commit-stack">
+                            <!-- Commits go here -->
+                            <div class="bg-slate-800 text-white p-2 rounded text-xs font-mono text-center opacity-50">
+                                Commit: Initial</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 text-green-400 p-4 font-mono text-sm border-t border-slate-800"
+                    id="terminal-output">
+                    $ status: Ready to begin...
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Branching & Merging Visualizer -->
+        <section id="merging-section">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <span
+                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
+                    Merging Mechanics
+                </h2>
+                <p class="text-slate-600 mt-2">
+                    Visualizing the difference between a <strong>Fast-Forward Merge</strong> (linear) and a
+                    <strong>Three-Way Merge</strong> (divergent).
+                    Toggle the switch to see the difference in the "Train Tracks".
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                <div class="flex justify-center mb-8">
+                    <div class="bg-slate-100 p-1 rounded-lg flex">
+                        <button onclick="setMergeType('fast-forward')" id="btn-ff"
+                            class="px-6 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-slate-800 transition-all">Fast-Forward</button>
+                        <button onclick="setMergeType('three-way')" id="btn-tw"
+                            class="px-6 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-700 transition-all">Three-Way
+                            Merge</button>
+                    </div>
+                </div>
+
+                <!-- Graph Container -->
+                <div class="relative h-[250px] w-full max-w-3xl mx-auto bg-slate-50 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center"
+                    id="graph-stage">
+                    <!-- Content injected by JS -->
+                </div>
+
+                <div class="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                    <h3 class="font-bold text-blue-900 text-sm mb-1" id="merge-title">Fast-Forward Merge</h3>
+                    <p class="text-sm text-blue-800" id="merge-desc">
+                        The <code>main</code> branch hasn't moved since you created your feature. Git simply slides the
+                        <code>main</code> label forward to catch up. No new commit is created.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: The Conflict Lab -->
+        <section id="conflict-section">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <span
+                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
+                    The Conflict Lab
+                </h2>
+                <p class="text-slate-600 mt-2">
+                    You have a merge conflict! Both branches changed line 2 of <code>index.html</code>.
+                    Act as the developer and choose how to resolve the conflict markers (<code>&lt;&lt;&lt;</code>,
+                    <code>===</code>, <code>&gt;&gt;&gt;</code>).
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Editor -->
+                <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden text-sm border border-gray-700 font-mono">
+                    <div class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
+                        <span class="text-gray-300">index.html</span>
+                        <div class="flex gap-1">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                    </div>
+                    <div class="p-4 text-gray-300 leading-6" id="editor-content">
+                        <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                        <div class="code-line conflict-marker">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</div>
+                        <div class="code-line conflict-content-a text-green-800 font-bold">&lt;h1&gt;[Your Name] | Lead
+                            Developer&lt;/h1&gt;</div>
+                        <div class="code-line conflict-marker">=======</div>
+                        <div class="code-line conflict-content-b text-blue-800 font-bold">&lt;h1&gt;Welcome to the
+                            Creative Lab&lt;/h1&gt;</div>
+                        <div class="code-line conflict-marker">&gt;&gt;&gt;&gt;&gt;&gt;&gt; creative-version</div>
+                        <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex flex-col justify-center space-y-4">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 mb-4">Resolution Options</h3>
+                        <div class="space-y-3">
+                            <button onclick="resolveConflict('current')"
+                                class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group">
+                                <span class="block font-bold text-slate-700 group-hover:text-green-700">Accept Current
+                                    Change (HEAD)</span>
+                                <span class="text-xs text-slate-500">Keep the "Lead Developer" title.</span>
+                            </button>
+                            <button onclick="resolveConflict('incoming')"
+                                class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                                <span class="block font-bold text-slate-700 group-hover:text-blue-700">Accept Incoming
+                                    Change</span>
+                                <span class="text-xs text-slate-500">Keep the "Creative Lab" title.</span>
+                            </button>
+                            <button onclick="resolveConflict('both')"
+                                class="w-full text-left px-4 py-3 border border-slate-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group">
+                                <span class="block font-bold text-slate-700 group-hover:text-purple-700">Keep Both
+                                    Changes</span>
+                                <span class="text-xs text-slate-500">Keep both titles in the file.</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="conflict-feedback"
+                        class="hidden p-4 bg-green-100 text-green-800 rounded-lg text-center font-bold">
+                        Conflict Resolved! Don't forget to commit.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Time Travel & Undo -->
+        <section id="undo-section">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <span
+                        class="bg-slate-800 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">4</span>
+                    Time Travel Console
+                </h2>
+                <p class="text-slate-600 mt-2">
+                    Mistakes happen. Learn when to use <code>git revert</code> (safe, public) vs <code>git reset</code>
+                    (destructive, private).
+                </p>
+            </div>
+
+            <div class="bg-slate-900 rounded-xl shadow-lg p-6 font-mono text-sm text-gray-300 relative min-h-[300px]">
+                <div class="absolute top-4 right-4 text-xs text-gray-500">Interactive Terminal</div>
+
+                <!-- History Visualization inside Terminal -->
+                <div class="mb-6 border-b border-gray-700 pb-4">
+                    <div class="text-gray-500 mb-2">Current History (git log --oneline):</div>
+                    <ul id="undo-history" class="space-y-1">
+                        <li class="text-yellow-400">c3d4e5f (HEAD -> main) Added "I AM A POTATO" title</li>
+                        <li class="text-white">b2c3d4e Added contact section</li>
+                        <li class="text-white">a1b2c3d Initial commit</li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="mb-2 text-white">Choose your command:</p>
+                        <div class="flex gap-2">
+                            <button onclick="runUndoCommand('revert')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">git revert
+                                c3d4e5f</button>
+                            <button onclick="runUndoCommand('reset')"
+                                class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">git reset --hard
+                                HEAD~1</button>
+                        </div>
+                        <p class="mt-4 text-xs text-gray-400 italic" id="undo-explanation">
+                            Select a command to see how it affects the history above.
+                        </p>
+                    </div>
+                    <div class="bg-black rounded p-3 text-green-400 h-full border border-gray-700">
+                        <div id="undo-terminal-output">$ _</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: Quiz -->
+        <section id="quiz-section" class="bg-white rounded-xl shadow-lg border border-slate-200 p-8">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold text-slate-800">Knowledge Check</h2>
+                <p class="text-slate-600">Test your retention of Week 1 concepts.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2 space-y-6" id="quiz-container">
+                    <!-- Quiz Question Injected Here -->
+                    <div class="animate-pulse bg-slate-100 h-32 rounded-lg"></div>
+                </div>
+
+                <div class="flex flex-col items-center justify-start space-y-4">
+                    <h3 class="font-bold text-slate-700">Your Progress</h3>
+                    <div class="chart-container" style="height: 200px; width: 200px;">
+                        <canvas id="quizChart"></canvas>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-slate-800" id="score-display">0%</div>
+                        <div class="text-xs text-slate-500">Correct Answers</div>
+                    </div>
+                    <button onclick="resetQuiz()"
+                        class="text-sm text-slate-500 hover:text-orange-500 underline mt-2">Reset Quiz</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-50 border-t border-slate-200 py-8 text-center text-slate-500 text-sm">
+        <p>Bootcamp Week 1 Resources | Based on Git & GitHub Fundamentals Study Guide</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // --- SECTION 1: Workflow Logic ---
+        const workflowState = {
+            status: 'clean', // clean, modified, staged, committed
+            location: 'repo' // working, staging, repo
+        };
+
+        function workflowAction(action) {
+            const fileObj = document.getElementById('file-object');
+            const fileStatus = document.getElementById('file-status');
+            const term = document.getElementById('terminal-output');
+            const staging = document.getElementById('staging-placeholder');
+            const stack = document.getElementById('commit-stack');
+
+            if (action === 'edit') {
+                workflowState.status = 'modified';
+                fileObj.classList.remove('bg-slate-200');
+                fileObj.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                fileStatus.innerText = 'Modified (Untracked changes)';
+                term.innerText = '$ echo "<h2>New Title</h2>" >> index.html';
+
+                // Visual move
+                document.getElementById('zone-working').classList.add('bg-red-50');
+            }
+            else if (action === 'add') {
+                if (workflowState.status !== 'modified') {
+                    term.innerText = '$ Error: No changes to stage. Edit the file first.';
+                    return;
+                }
+                workflowState.status = 'staged';
+                fileObj.classList.remove('bg-red-100', 'border-red-300', 'text-red-800');
+                fileObj.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
+                fileStatus.innerText = 'Staged (Ready to commit)';
+                term.innerText = '$ git add .';
+
+                // Move visual
+                fileObj.style.opacity = '0';
+                setTimeout(() => {
+                    fileObj.style.opacity = '1';
+                    staging.innerHTML = '';
+                    staging.appendChild(fileObj.cloneNode(true));
+                    staging.firstElementChild.style.opacity = '1';
+                    staging.firstElementChild.style.marginTop = '0';
+                    fileObj.style.display = 'none'; // Hide original
+                }, 300);
+            }
+            else if (action === 'commit') {
+                if (workflowState.status !== 'staged') {
+                    term.innerText = '$ Error: Nothing staged to commit. Run git add first.';
+                    return;
+                }
+                workflowState.status = 'committed';
+                term.innerText = '$ git commit -m "Update title"';
+
+                // Visual
+                const stagedFile = staging.firstElementChild;
+                if (stagedFile) stagedFile.style.transform = 'scale(0.5) translate(200px, 0)';
+
+                setTimeout(() => {
+                    staging.innerHTML = 'Empty (Box Open)';
+                    const newCommit = document.createElement('div');
+                    newCommit.className = 'bg-slate-800 text-white p-2 rounded text-xs font-mono text-center mb-1 animate-bounce';
+                    newCommit.innerText = 'Commit: Update title';
+                    stack.prepend(newCommit);
+
+                    // Reset working dir visual
+                    fileObj.style.display = 'block';
+                    fileObj.classList.remove('bg-green-100', 'border-green-300', 'text-green-800');
+                    fileObj.classList.add('bg-slate-200', 'border-slate-400', 'text-slate-700');
+                    fileStatus.innerText = 'Clean';
+                    document.getElementById('zone-working').classList.remove('bg-red-50');
+                }, 500);
+            }
+            else if (action === 'push') {
+                if (stack.children.length < 2) {
+                    term.innerText = '$ git push origin... (Everything up-to-date)';
+                    return;
+                }
+                term.innerText = '$ git push origin main... Success!';
+                Array.from(stack.children).forEach(child => {
+                    child.classList.add('border', 'border-purple-400');
+                    child.innerText += ' (Remote)';
+                });
+            }
+            else if (action === 'reset') {
+                location.reload(); // Simple reset
+            }
+        }
+
+        // --- SECTION 2: Merging Visualizer ---
+        function setMergeType(type) {
+            const stage = document.getElementById('graph-stage');
+            const title = document.getElementById('merge-title');
+            const desc = document.getElementById('merge-desc');
+            const btnFF = document.getElementById('btn-ff');
+            const btnTW = document.getElementById('btn-tw');
+
+            // Toggle Button Styles
+            if (type === 'fast-forward') {
+                btnFF.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+                btnFF.classList.remove('text-slate-500');
+                btnTW.classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
+                btnTW.classList.add('text-slate-500');
+
+                // Content
+                title.innerText = 'Fast-Forward Merge';
+                desc.innerHTML = 'The <code>main</code> branch pointer just moves forward. History is a straight line.';
+
+                // HTML Graph for Fast Forward
+                stage.innerHTML = `
+                    <div class="flex items-center gap-4 relative">
+                        <div class="w-full h-1 bg-slate-300 absolute top-1/2 left-0 z-0"></div>
+                        <div class="w-8 h-8 rounded-full bg-slate-400 z-10 relative group cursor-pointer git-node"><span class="absolute -bottom-6 left-0 text-xs text-slate-400 w-20">Initial</span></div>
+                        <div class="w-8 h-8 rounded-full bg-slate-400 z-10 relative group cursor-pointer git-node"></div>
+                        <div class="w-8 h-8 rounded-full bg-orange-500 z-10 relative group cursor-pointer git-node border-4 border-white shadow-lg">
+                            <span class="absolute -top-8 -left-4 bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded font-mono font-bold whitespace-nowrap">HEAD -> main</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                btnTW.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+                btnTW.classList.remove('text-slate-500');
+                btnFF.classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
+                btnFF.classList.add('text-slate-500');
+
+                // Content
+                title.innerText = 'Three-Way Merge';
+                desc.innerHTML = 'Histories diverged. Git creates a special <strong>Merge Commit</strong> to join the two separate timeline tracks together.';
+
+                // HTML Graph for Three-Way
+                stage.innerHTML = `
+                    <div class="relative w-full h-full flex items-center justify-center">
+                        <!-- Main Track -->
+                        <div class="absolute h-1 bg-slate-300 w-3/4 top-1/2 -translate-y-4"></div>
+                        <!-- Branch Track -->
+                        <div class="absolute h-1 bg-blue-300 w-1/3 top-1/2 translate-y-4 left-1/4 rounded-b-lg border-l-2 border-b-2 border-slate-300 rounded-bl-xl origin-top-left rotate-0" style="height: 30px; border:none; background:none;">
+                            <svg width="300" height="60" style="position:absolute; top: -10px; left:0;">
+                                <path d="M 0 0 Q 30 40 60 40 L 180 40 Q 210 40 240 0" stroke="#94a3b8" stroke-width="3" fill="none" />
+                            </svg>
+                        </div>
+
+                        <!-- Nodes -->
+                        <div class="absolute left-[15%] top-[calc(50%-28px)] w-8 h-8 rounded-full bg-slate-400 z-10"></div> <!-- Split point -->
+                        
+                        <div class="absolute left-[35%] top-[calc(50%-28px)] w-8 h-8 rounded-full bg-orange-400 z-10 border-2 border-white" title="Main Commit"></div> 
+                        <div class="absolute left-[45%] top-[calc(50%+12px)] w-8 h-8 rounded-full bg-blue-400 z-10 border-2 border-white" title="Feature Commit"></div>
+                        
+                        <div class="absolute left-[70%] top-[calc(50%-28px)] w-8 h-8 rounded-full bg-purple-500 z-10 border-4 border-white shadow-lg git-node">
+                             <span class="absolute -top-8 -left-8 bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded font-mono font-bold whitespace-nowrap">Merge Commit</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        // Initialize
+        setMergeType('fast-forward');
+
+
+        // --- SECTION 3: Conflict Logic ---
+        function resolveConflict(choice) {
+            const editor = document.getElementById('editor-content');
+            const feedback = document.getElementById('conflict-feedback');
+
+            let newContent = '';
+
+            if (choice === 'current') {
+                newContent = `
+                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                    <div class="code-line text-green-400 bg-green-900/30">&lt;h1&gt;[Your Name] | Lead Developer&lt;/h1&gt;</div>
+                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                `;
+                feedback.innerText = 'Resolved: Kept "Lead Developer" (HEAD). Run "git add" next!';
+            } else if (choice === 'incoming') {
+                newContent = `
+                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                    <div class="code-line text-blue-400 bg-blue-900/30">&lt;h1&gt;Welcome to the Creative Lab&lt;/h1&gt;</div>
+                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                `;
+                feedback.innerText = 'Resolved: Kept "Creative Lab" (Incoming). Run "git add" next!';
+            } else {
+                newContent = `
+                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                    <div class="code-line text-green-400">&lt;h1&gt;[Your Name] | Lead Developer&lt;/h1&gt;</div>
+                    <div class="code-line text-blue-400">&lt;h1&gt;Welcome to the Creative Lab&lt;/h1&gt;</div>
+                    <div class="code-line text-gray-500">&lt;!-- ... existing code ... --&gt;</div>
+                `;
+                feedback.innerText = 'Resolved: Kept Both. A bit crowded, but conflict gone!';
+            }
+
+            editor.innerHTML = newContent;
+            feedback.classList.remove('hidden');
+        }
+
+        // --- SECTION 4: Undo Logic ---
+        function runUndoCommand(cmd) {
+            const historyList = document.getElementById('undo-history');
+            const output = document.getElementById('undo-terminal-output');
+            const explanation = document.getElementById('undo-explanation');
+
+            if (cmd === 'revert') {
+                // Revert adds a new commit
+                output.innerText = '$ git revert c3d4e5f\n[main d5e6f7g] Revert "Added I AM A POTATO title"\n 1 file changed, 1 deletion(-)';
+                explanation.innerText = "Notice: A NEW commit was created to cancel the mistake. History is preserved. Safe for teams.";
+
+                const newCommit = document.createElement('li');
+                newCommit.className = 'text-green-400 font-bold border-l-2 border-green-500 pl-2';
+                newCommit.innerText = 'd5e6f7g (HEAD -> main) Revert "Added I AM A POTATO title"';
+                historyList.prepend(newCommit);
+
+                // Update old HEAD style
+                historyList.children[1].className = 'text-gray-400 line-through decoration-red-500';
+            }
+            else if (cmd === 'reset') {
+                // Reset deletes history
+                output.innerText = '$ git reset --hard HEAD~1\nHEAD is now at b2c3d4e Added contact section';
+                explanation.innerText = "Notice: The top commit completely VANISHED. Dangerous if you pushed, but great for local cleanup.";
+
+                if (historyList.children.length > 0) {
+                    historyList.removeChild(historyList.firstElementChild);
+                    historyList.firstElementChild.className = 'text-yellow-400 font-bold';
+                    historyList.firstElementChild.innerText = historyList.firstElementChild.innerText.replace(' (HEAD -> main)', '') + ' (HEAD -> main)';
+                }
+            }
+        }
+
+        // --- SECTION 5: Quiz Logic ---
+        const quizData = [
+            {
+                q: "What is the primary purpose of the 'Staging Area'?",
+                options: ["To auto-save files", "To act as a loading zone for the next commit", "To host code online"],
+                a: 1 // Index of correct
+            },
+            {
+                q: "What causes a Merge Conflict?",
+                options: ["Editing the same line in different branches", "Forgetting to git add", "Network errors"],
+                a: 0
+            },
+            {
+                q: "Which undo command creates a NEW commit to fix a mistake?",
+                options: ["git reset", "git undo", "git revert"],
+                a: 2
+            },
+            {
+                q: "What does HEAD refer to?",
+                options: ["The main server", "Your current location in history", "The first commit"],
+                a: 1
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+        let quizChartInstance = null;
+
+        function initQuiz() {
+            renderQuestion();
+            initChart();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('quizChart').getContext('2d');
+            quizChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Remaining'],
+                    datasets: [{
+                        data: [0, quizData.length],
+                        backgroundColor: ['#22c55e', '#e2e8f0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                }
+            });
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('quiz-container');
+            if (currentQ >= quizData.length) {
+                container.innerHTML = `
+                    <div class="bg-green-50 p-6 rounded-lg text-center">
+                        <h3 class="text-xl font-bold text-green-800">Quiz Complete!</h3>
+                        <p class="text-green-600 mt-2">You scored ${score} out of ${quizData.length}.</p>
+                        <p class="mt-4 text-sm text-slate-500">Ready for Week 2?</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const q = quizData[currentQ];
+            let html = `
+                <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <div class="text-xs text-slate-400 uppercase font-bold mb-2">Question ${currentQ + 1}/${quizData.length}</div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">${q.q}</h3>
+                    <div class="space-y-2">
+            `;
+
+            q.options.forEach((opt, idx) => {
+                html += `<button onclick="answerQuiz(${idx})" class="w-full text-left p-3 bg-white border border-slate-200 rounded hover:border-orange-400 hover:text-orange-600 transition-colors text-sm text-slate-600">${opt}</button>`;
+            });
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+
+        function answerQuiz(choice) {
+            const correct = quizData[currentQ].a === choice;
+            if (correct) score++;
+
+            // Update Chart
+            quizChartInstance.data.datasets[0].data = [score, quizData.length - score];
+            quizChartInstance.update();
+            document.getElementById('score-display').innerText = Math.round((score / quizData.length) * 100) + '%';
+
+            currentQ++;
+            renderQuestion();
+        }
+
+        function resetQuiz() {
+            currentQ = 0;
+            score = 0;
+            quizChartInstance.data.datasets[0].data = [0, quizData.length];
+            quizChartInstance.update();
+            document.getElementById('score-display').innerText = '0%';
+            renderQuestion();
+        }
+
+        // Start
+        initQuiz();
+
+    </script>
 </body>
 
 </html>
